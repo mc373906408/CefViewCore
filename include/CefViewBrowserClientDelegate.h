@@ -198,7 +198,9 @@ public:
                                     const CefString& message_text,
                                     bool is_reload,
                                     CefRefPtr<CefJSDialogCallback>& callback) = 0;
+
   virtual void onResetDialogState(CefRefPtr<CefBrowser>& browser) = 0;
+
   virtual void onDialogClosed(CefRefPtr<CefBrowser>& browser) = 0;
 #pragma endregion
 
@@ -249,6 +251,32 @@ public:
                          const CefString& failedUrl,
                          bool& handled) = 0;
 #pragma endregion
+
+#if CEF_VERSION_MAJOR >= 106
+#pragma region PermissionHandler
+  virtual bool onRequestMediaAccessPermission(CefRefPtr<CefBrowser>& browser,
+                                              CefRefPtr<CefFrame>& frame,
+                                              const CefString& requesting_origin,
+                                              uint32_t requested_permissions,
+                                              CefRefPtr<CefMediaAccessCallback>& callback)
+  {
+    return false;
+  }
+
+  virtual bool onShowPermissionPrompt(CefRefPtr<CefBrowser>& browser,
+                                      uint64_t prompt_id,
+                                      const CefString& requesting_origin,
+                                      uint32_t requested_permissions,
+                                      CefRefPtr<CefPermissionPromptCallback>& callback)
+  {
+    return false;
+  }
+
+  virtual void onDismissPermissionPrompt(CefRefPtr<CefBrowser>& browser,
+                                         uint64_t prompt_id,
+                                         cef_permission_request_result_t result) {};
+#pragma endregion
+#endif
 
   // Off screen rendering
 #pragma region RenderHandler
