@@ -47,6 +47,44 @@ if(NOT CUSTOM_CEF_SDK_DIR)
   # Scan extracted sdk dir
   set(CEF_SDK_EXTRACTED_DIR "${CEF_SDK_WORKSPACE}/${CEF_SDK_PACKAGE_NAME}")
   file(GLOB CEF_SDK_DIR "${CEF_SDK_EXTRACTED_DIR}")
+
+  # #################################################################################
+  # Stage 2. Extract CEF binary package
+  if(NOT EXISTS ${CEF_SDK_DIR})
+    set(CEF_LOCAL_PACKAGE_PATH "${CEF_SDK_WORKSPACE}/${CEF_SDK_PACKAGE_NAME}.tar.bz2")
+
+    # if no local cef sdk package file then download it
+    if(NOT EXISTS "${CEF_LOCAL_PACKAGE_PATH}")
+      set(CEF_SDK_DOWNLOAD_URL "https://cef-builds.spotifycdn.com/${CEF_SDK_PACKAGE_NAME}.tar.bz2")
+      message(STATUS "Downloading CEF binary SDK from ${CEF_SDK_DOWNLOAD_URL}")
+      file(DOWNLOAD
+        "${CEF_SDK_DOWNLOAD_URL}" # URL
+        "${CEF_LOCAL_PACKAGE_PATH}" # Local Path
+        SHOW_PROGRESS
+        TLS_VERIFY ON
+        STATUS DOWNLOAD_RESULT
+      )
+      list(GET DOWNLOAD_RESULT 0 DOWNLOAD_RESULT_CODE)
+      list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
+
+      if(NOT DOWNLOAD_RESULT_CODE EQUAL 0)
+        file(REMOVE "${CEF_LOCAL_PACKAGE_PATH}")
+        message(FATAL_ERROR "Failed to download CEF binary SDK, ERROR:[${DOWNLOAD_RESULT_CODE}]${DOWNLOAD_RESULT_MESSAGE}")
+      endif()
+    endif()
+
+    message(STATUS "Extracting CEF binary SDK from ${CEF_LOCAL_PACKAGE_PATH}")
+
+    # Extract
+    file(ARCHIVE_EXTRACT
+      INPUT "${CEF_LOCAL_PACKAGE_PATH}"
+      DESTINATION "${CEF_SDK_WORKSPACE}"
+      VERBOSE
+    )
+
+    # Capture the dir name
+    file(GLOB CEF_SDK_DIR "${CEF_SDK_EXTRACTED_DIR}")
+  endif()
 else()
   message(STATUS "CUSTOM_CEF_SDK_DIR set: ${CUSTOM_CEF_SDK_DIR}")
   set(CEF_SDK_DIR "${CUSTOM_CEF_SDK_DIR}")
@@ -54,44 +92,6 @@ endif()
 
 # output
 message(STATUS "CEF SDK dir: ${CEF_SDK_DIR}")
-
-# #################################################################################
-# Stage 2. Extract CEF binary package
-if(NOT EXISTS ${CEF_SDK_DIR})
-  set(CEF_LOCAL_PACKAGE_PATH "${CEF_SDK_WORKSPACE}/${CEF_SDK_PACKAGE_NAME}.tar.bz2")
-
-  # if no local cef sdk package file then download it
-  if(NOT EXISTS "${CEF_LOCAL_PACKAGE_PATH}")
-    set(CEF_SDK_DOWNLOAD_URL "https://cef-builds.spotifycdn.com/${CEF_SDK_PACKAGE_NAME}.tar.bz2")
-    message(STATUS "Downloading CEF binary SDK from ${CEF_SDK_DOWNLOAD_URL}")
-    file(DOWNLOAD
-      "${CEF_SDK_DOWNLOAD_URL}" # URL
-      "${CEF_LOCAL_PACKAGE_PATH}" # Local Path
-      SHOW_PROGRESS
-      TLS_VERIFY ON
-      STATUS DOWNLOAD_RESULT
-    )
-    list(GET DOWNLOAD_RESULT 0 DOWNLOAD_RESULT_CODE)
-    list(GET DOWNLOAD_RESULT 1 DOWNLOAD_RESULT_MESSAGE)
-
-    if(NOT DOWNLOAD_RESULT_CODE EQUAL 0)
-      file(REMOVE "${CEF_LOCAL_PACKAGE_PATH}")
-      message(FATAL_ERROR "Failed to download CEF binary SDK, ERROR:[${DOWNLOAD_RESULT_CODE}]${DOWNLOAD_RESULT_MESSAGE}")
-    endif()
-  endif()
-
-  message(STATUS "Extracting CEF binary SDK from ${CEF_LOCAL_PACKAGE_PATH}")
-
-  # Extract
-  file(ARCHIVE_EXTRACT
-    INPUT "${CEF_LOCAL_PACKAGE_PATH}"
-    DESTINATION "${CEF_SDK_WORKSPACE}"
-    VERBOSE
-  )
-
-  # Capture the dir name
-  file(GLOB CEF_SDK_DIR "${CEF_SDK_EXTRACTED_DIR}")
-endif()
 
 # #################################################################################
 # Stage 3. Config CEF
